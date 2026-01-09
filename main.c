@@ -68,14 +68,32 @@ int main(int argc, char *argv[])
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_QUIT) {
         running = 0;
-      }}
+      }
+      else if (e.type == SDL_KEYDOWN) {
+        if(e.key.keysym.sym == SDLK_UP){
+          centerY-=20;
+        }
+
+        else if(e.key.keysym.sym == SDLK_DOWN){
+          centerY+=20;
+        }
+        else if(e.key.keysym.sym == SDLK_RIGHT){
+          centerX+=20;
+        }
+        else if(e.key.keysym.sym == SDLK_LEFT){
+          centerX-=20;
+        }
+      }
+
+    }
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     DrawCircle(renderer,centerX,centerY,100);
     SDL_RenderPresent(renderer);
   }
-
+  
+  SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
