@@ -1,0 +1,84 @@
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <stdio.h>
+#include <math.h>
+
+struct shape{
+  int startX;
+  int startY;
+  int endX;
+  int endY;
+};
+void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius)
+{
+
+  int num_points = 360; // Or more for smoother curve
+
+  for (int i = -90; i < num_points; i++) {
+    float angle = 2.0 * M_PI * i / num_points; // radians
+    int x = (int)(centreX+ radius * cos(angle));
+    int y = (int)(centreY + radius * sin(angle));
+    SDL_RenderDrawPoint(renderer, x, y); // Draw point
+    int newX=x+radius*10*cos(angle);
+    int newY=y+radius*10*sin(angle);
+    SDL_RenderDrawLine(renderer,x,y,newX,newY);
+  }
+}
+int main(int argc, char *argv[])
+{
+  (void)argc;
+  (void)argv;
+
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    printf("SDL_Init error: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  SDL_Window *window = SDL_CreateWindow(
+      "RayTracing Engine",
+      SDL_WINDOWPOS_CENTERED,
+      SDL_WINDOWPOS_CENTERED,
+      640,
+      480,
+      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+      );
+
+  if (!window) {
+    printf("SDL_CreateWindow error: %s\n", SDL_GetError());
+    SDL_Quit();
+    return 1;
+  }
+
+  int running = 1;
+  SDL_Event e;
+  SDL_Renderer *renderer = SDL_CreateRenderer(
+      window,
+      -1,
+      SDL_RENDERER_ACCELERATED
+      );
+
+
+  int pw, ph;
+  SDL_GL_GetDrawableSize(window, &pw, &ph);
+  int centerY = 300;
+  int centerX = 300;
+  printf("Pixel size: %dx%d\n", pw, ph);
+  while (running) {
+    while (SDL_PollEvent(&e)) {
+      if (e.type == SDL_QUIT) {
+        running = 0;
+      }}
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    DrawCircle(renderer,centerX,centerY,100);
+    SDL_RenderPresent(renderer);
+  }
+
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+  return 0;
+}
+
+
