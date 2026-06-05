@@ -3,6 +3,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 struct shape{
   int startX;
@@ -17,14 +18,16 @@ typedef struct{
 }Point;
 
 typedef struct{
-  int x;
-  int y;
+  double x;
+  double y;
 }Vector;
 
 typedef struct{
   Point origin;
   Vector direction;
 }Ray;
+
+double inf = INFINITY;
 
 void DrawRect(SDL_Renderer * renderer, Point topLeft, int32_t width, int32_t height)
 {
@@ -41,7 +44,7 @@ void DrawRect(SDL_Renderer * renderer, Point topLeft, int32_t width, int32_t hei
   }
 }
 
-void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius)
+void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius, Ray *rays)
 {
 
   int num_points = 360; // Or more for smoother curve
@@ -53,13 +56,34 @@ void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32
     SDL_RenderDrawPoint(renderer, x, y); // Draw point
     int newX=x+radius*10*cos(angle);
     int newY=y+radius*10*sin(angle);
-    SDL_RenderDrawLine(renderer,x,y,newX,newY);
+    
+    Point p = {x, y};
+    Vector v = {cos(angle), sin(angle)};
+    rays[i+90] = (Ray){p,v}; // origin, direction
+  }
+}
+
+
+void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays)
+{
+  for (int i = 0; i<num_rays; i++) {
+    // save origin points in vars
+    int originX = rays[i].origin.x;
+    int originY = rays[i].origin.y;
+
+    // calc the end points
+    int x = rays[i].origin.x + 500*rays[i].direction.x;
+    int y = rays[i].origin.y + 500*rays[i].direction.y;
+
+    SDL_RenderDrawLine(renderer, originX, originY, x, y);
   }
 }
 int main(int argc, char *argv[])
 {
   (void)argc;
   (void)argv;
+  int num_rays = 360;
+  Ray *rays = malloc(num_rays * sizeof(Ray));
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init error: %s\n", SDL_GetError());
@@ -109,8 +133,10 @@ int main(int argc, char *argv[])
   Point tL = {20,20};
   int width = 100;
   int height = 100;
+
   DrawRect(renderer, tL, width, height);
-  DrawCircle(renderer,centerX,centerY,100);
+  DrawCircle(renderer,centerX,centerY,100, rays);
+  DrawRays(renderer, rays, num_rays);
 
   while (running) {
     while (SDL_PollEvent(&e)) {
@@ -134,15 +160,16 @@ int main(int argc, char *argv[])
 
     }
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    //SDL_RenderClear(renderer);
+    SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     DrawRect(renderer, tL, width, height);
-    DrawCircle(renderer, centerX, centerY, 50); 
+    DrawCircle(renderer, centerX, centerY, 50, rays);
+  DrawRays(renderer, rays, num_rays);
 
     SDL_RenderPresent(renderer);
   }
-
+  free(rays);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
