@@ -5,12 +5,13 @@
 #include <math.h>
 #include <stdlib.h>
 
-struct shape{
+typedef struct{
+  char* type;
   int startX;
   int startY;
   int endX;
   int endY;
-};
+}Shape;
 
 typedef struct{
   int x;
@@ -64,17 +65,42 @@ void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32
 }
 
 
-void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays)
+void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, int num_shapes, int time)
 {
   for (int i = 0; i<num_rays; i++) {
     // save origin points in vars
     int originX = rays[i].origin.x;
     int originY = rays[i].origin.y;
 
-    // calc the end points
-    int x = rays[i].origin.x + 500*rays[i].direction.x;
-    int y = rays[i].origin.y + 500*rays[i].direction.y;
+    
+    //calculate entering and exiting times between x1 and x2 of shapes
+    double minT = INFINITY;
+    for (int j = 0; j< num_shapes; j++) {
+      double tendX = (shapes[j].endX - originX)/ rays[i].direction.x;
+      double tstartX = (shapes[j].startX - originX)/ rays[i].direction.x;
+      double tminX = fmin(tstartX, tendX);
+      double tmaxX= fmax(tstartX, tendX);
+      double tendY = (shapes[j].endY - originY)/ rays[i].direction.y;
+      double tstartY = (shapes[j].startY - originY)/ rays[i].direction.y;
+      double tmaxY = fmax(tstartY, tendY);
+      double tminY = fmin(tstartY, tendY);
+      
+      // calc entry and exit times 
+      double tentry = fmax(tminX, tminY);
+      double texit = fmin(tmaxX, tmaxY);
 
+      // check if entry time is smaller than exit time
+      if(tentry<=texit && tentry>=0){
+        minT= fmin(minT, tentry);
+      }
+    }
+    
+    // either draw with the time of collision or with the basic value
+    if (minT != INFINITY) {
+      // calc the end points
+      x = rays[i].origin.x + minT*rays[i].direction.x;
+      y = rays[i].origin.y + minT*rays[i].direction.y;
+    }
     SDL_RenderDrawLine(renderer, originX, originY, x, y);
   }
 }
@@ -83,7 +109,10 @@ int main(int argc, char *argv[])
   (void)argc;
   (void)argv;
   int num_rays = 360;
+  int num_shapes = 1;
   Ray *rays = malloc(num_rays * sizeof(Ray));
+  Shape *shapes = malloc(num_shapes * sizeof(Shape));
+  int time = 0;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init error: %s\n", SDL_GetError());
@@ -129,14 +158,13 @@ int main(int argc, char *argv[])
   //create rect at fixed pos 
   SDL_Rect rect;
 
+
   //set pos for different rect cords
-  Point tL = {20,20};
+  shapes[0] = (Shape){"rect", 300, 100, 400, 200};
+  Point tL = {300,100};
   int width = 100;
   int height = 100;
 
-  DrawRect(renderer, tL, width, height);
-  DrawCircle(renderer,centerX,centerY,100, rays);
-  DrawRays(renderer, rays, num_rays);
 
   while (running) {
     while (SDL_PollEvent(&e)) {
@@ -159,13 +187,15 @@ int main(int argc, char *argv[])
       }
 
     }
+
+    // background
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     DrawRect(renderer, tL, width, height);
     DrawCircle(renderer, centerX, centerY, 50, rays);
-  DrawRays(renderer, rays, num_rays);
+    DrawRays(renderer, rays, num_rays, shapes, num_shapes);
 
     SDL_RenderPresent(renderer);
   }
