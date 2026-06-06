@@ -43,13 +43,12 @@ void DrawRect(SDL_Renderer * renderer, Point topLeft, int32_t width, int32_t hei
   }
 }
 
-void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius, Ray *rays)
+void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius, Ray *rays, int num_rays)
 {
 
-  int num_points = 360; // Or more for smoother curve
 
-  for (int i = -90; i < num_points; i++) {
-    float angle = 2.0 * M_PI * i / num_points; // radians
+  for (int i = -90; i < num_rays; i++) {
+    float angle = 2.0 * M_PI * i / num_rays; // radians
     int x = (int)(centreX+ radius * cos(angle));
     int y = (int)(centreY + radius * sin(angle));
     SDL_RenderDrawPoint(renderer, x, y); // Draw point
@@ -63,7 +62,7 @@ void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32
 }
 
 
-void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, int num_shapes, int time)
+void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, int num_shapes, double time, double max_time)
 {
   for (int i = 0; i<num_rays; i++) {
     // save origin points in vars
@@ -94,9 +93,16 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
     }
     
     // either draw with the time of collision or with the basic value
-    int x = rays[i].origin.x + minT*rays[i].direction.x;
-    int y = rays[i].origin.y + minT*rays[i].direction.y;
-    SDL_RenderDrawLine(renderer, originX, originY, x, y);
+    for (int j = 0;j<minT;j++) {
+      int x = rays[i].origin.x + j*rays[i].direction.x;
+      int y = rays[i].origin.y + j*rays[i].direction.y;
+
+      //set rgb coloring for gradient
+      double rgb = 255/max_time;
+      double currRgb = (max_time-j)* rgb;
+      SDL_SetRenderDrawColor(renderer,currRgb ,currRgb ,currRgb , 255);
+      SDL_RenderDrawPoint(renderer, x, y);
+    }
   }
 }
 int main(int argc, char *argv[])
@@ -105,7 +111,7 @@ int main(int argc, char *argv[])
   (void)argv;
   int num_rays = 360;
   int num_shapes = 1;
-  double time_max = 700;
+  double time_max = 300;
   Ray *rays = malloc(num_rays * sizeof(Ray));
   Shape *shapes = malloc(num_shapes * sizeof(Shape));
   int time = 0;
@@ -192,10 +198,9 @@ int main(int argc, char *argv[])
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     DrawRect(renderer, tL, width, height);
-    DrawCircle(renderer, centerX, centerY, 50, rays);
-    DrawRays(renderer, rays, num_rays, shapes, num_shapes, time);
+    DrawCircle(renderer, centerX, centerY, 50, rays, num_rays);
+    DrawRays(renderer, rays, num_rays, shapes, num_shapes, time, time_max);
 
     SDL_RenderPresent(renderer);
   }
