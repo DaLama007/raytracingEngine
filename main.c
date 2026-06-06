@@ -28,8 +28,6 @@ typedef struct{
   Vector direction;
 }Ray;
 
-double inf = INFINITY;
-
 void DrawRect(SDL_Renderer * renderer, Point topLeft, int32_t width, int32_t height)
 {
   int x = topLeft.x;
@@ -74,7 +72,7 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
 
     
     //calculate entering and exiting times between x1 and x2 of shapes
-    double minT = INFINITY;
+    double minT = time;
     for (int j = 0; j< num_shapes; j++) {
       double tendX = (shapes[j].endX - originX)/ rays[i].direction.x;
       double tstartX = (shapes[j].startX - originX)/ rays[i].direction.x;
@@ -96,11 +94,8 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
     }
     
     // either draw with the time of collision or with the basic value
-    if (minT != INFINITY) {
-      // calc the end points
-      x = rays[i].origin.x + minT*rays[i].direction.x;
-      y = rays[i].origin.y + minT*rays[i].direction.y;
-    }
+    int x = rays[i].origin.x + minT*rays[i].direction.x;
+    int y = rays[i].origin.y + minT*rays[i].direction.y;
     SDL_RenderDrawLine(renderer, originX, originY, x, y);
   }
 }
@@ -110,6 +105,7 @@ int main(int argc, char *argv[])
   (void)argv;
   int num_rays = 360;
   int num_shapes = 1;
+  double time_max = 700;
   Ray *rays = malloc(num_rays * sizeof(Ray));
   Shape *shapes = malloc(num_shapes * sizeof(Shape));
   int time = 0;
@@ -167,6 +163,10 @@ int main(int argc, char *argv[])
 
 
   while (running) {
+    // increase time if max not reached
+    if(time_max > time) time++;
+
+    // check for keyboard inputs to move light source
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_QUIT) {
         running = 0;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     DrawRect(renderer, tL, width, height);
     DrawCircle(renderer, centerX, centerY, 50, rays);
-    DrawRays(renderer, rays, num_rays, shapes, num_shapes);
+    DrawRays(renderer, rays, num_rays, shapes, num_shapes, time);
 
     SDL_RenderPresent(renderer);
   }
