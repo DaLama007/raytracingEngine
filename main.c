@@ -161,11 +161,15 @@ int main(int argc, char *argv[])
   SDL_Rect rect;
 
 
-  //set pos for different rect cords
-  shapes[0] = (Shape){"rect", 300, 100, 400, 200};
-  Point tL = {300,100};
-  int width = 100;
-  int height = 100;
+  // generate pos for different rect cords
+  int width = rand()%300;
+  int height = rand()%300;
+  int startX = rand()%(pw - width);
+  int startY = rand()%(ph - height);
+  int endX = startX+width;
+  int endY = startY+height;
+  shapes[0] = (Shape){"rect", startX, startY, endX, endY};
+  Point tL = {startX,startY};
 
 
   while (running) {
