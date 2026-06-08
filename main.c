@@ -106,16 +106,54 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
 
       else{
         // circle is defined by (x-C_x)^2 + (y-C_y)^2 = r^2
+        //
+        // so lets insert the formula of a ray: P(x,y) = O(O_x, O_y) + t*D;
+        // into the seperate x and y forms of the formula
+        //
+        // (O + t*D - C)^2 = r^2
+        //
+        // For simplification: L = O-C
+        // => (L + t*D)^2 = r^2
+        // 
+        // L^2 + 2L*t*D + (D)t^2 = r^2
+        // <=> D^2*t^2 + 2LD*t + L^2 - r^2 = 0
+        //
+        // And the nthe determinant and calculate based on result
+        
+        Point C = {curr.startX+(curr.endX-curr.startX)/2, curr.startY+(curr.endY - curr.startY)/2};
+        double Lx = originX - C.x;
+        double Ly = originY - C.y;
+        double Dx = rays[i].direction.x;
+        double Dy = rays[i].direction.y;
+        double r = (curr.endX - curr.startX)/ 2.0;
+        double a = Dx*Dx + Dy*Dy;
+        double b = 2*(Lx*Dx + Ly*Dy);
+        double c = Lx*Lx + Ly*Ly - r*r;
+        double discriminant = b*b - 4 * a * c;
+
+        // handle different det values:
+        if(discriminant > 0){
+          double t1 = (-b - sqrt(discriminant))/(2 * a);
+          double t2 = (-b + sqrt(discriminant))/(2 * a);
+          if (t1 >= 0) minT = fmin(minT, t1);
+          if (t2 >= 0) minT = fmin(minT, t2);
+        }
+        else if(discriminant == 0){
+          double t1 = -b/(2 * a);
+
+          if(t1 >= 0) minT = fmin(t1, minT);
+        }
+        else continue;
       }
     }
 
     // either draw with the time of collision or with the basic value
-    for (int j = 0;j<minT;j++) {
-      int x = rays[i].origin.x + j*rays[i].direction.x;
-      int y = rays[i].origin.y + j*rays[i].direction.y;
+    for (int j = 0;j<minT;j+=1.0) {
+      int x = (int)(rays[i].origin.x + j*rays[i].direction.x);
+      int y = (int)(rays[i].origin.y + j*rays[i].direction.y);
 
       //set rgb coloring for gradient
-      double rgb = 255/max_time;
+      double rgb = 255.0/max_time;
       double currRgb = (max_time-j)* rgb;
       SDL_SetRenderDrawColor(renderer,currRgb ,currRgb ,currRgb , 255);
       SDL_RenderDrawPoint(renderer, x, y);
@@ -135,15 +173,15 @@ void generateShapes(SDL_Renderer * renderer, Shape *shapes, int shapeCount, int 
     // select one of the available shapes randomly
     int det = rand()%3;
     if(det == 0) shapes[i] = (Shape){"rectangle", startX, startY, endX, endY};
-    else shapes[i] = (Shape){"circle", startX, startY, endX, endY};
+    else shapes[i] = (Shape){"circle", startX, startY, startX+width, startY+width};
   }
 }
 
 void drawShapes(SDL_Renderer * renderer, Shape *shapes, int shapeCount){
   for (int i=0;i<shapeCount;i++) {
     Shape curr = shapes[i];
-    if(strcmp(curr.type, "circle")){
-      int radius = (curr.endX -curr.startX)/2;
+    if(strcmp(curr.type, "circle") == 0){
+      double radius = (curr.endX -curr.startX)/2.0;
       int centerX = curr.startX+radius;
       int centerY = curr.startY+radius;
       DrawCircle(renderer, centerX,centerY,radius);
@@ -162,7 +200,7 @@ int main(int argc, char *argv[])
   (void)argc;
   (void)argv;
   int num_rays = 360;
-  int num_shapes = 4;
+  int num_shapes = 8;
   double time_max = 300;
   Ray *rays = malloc(num_rays * sizeof(Ray));
   Shape *shapes = malloc(num_shapes * sizeof(Shape));
@@ -254,6 +292,7 @@ int main(int argc, char *argv[])
     SDL_RenderPresent(renderer);
   }
   free(rays);
+  free(shapes);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
