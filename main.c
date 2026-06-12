@@ -163,8 +163,8 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
 
 void generateShapes(SDL_Renderer * renderer, Shape *shapes, int shapeCount, int panelWidth, int panelHeight){
   for (int i=0;i<shapeCount;i++) {
-    int width = rand()%300;
-    int height = rand()%300;
+    int width = rand()%150;
+    int height = rand()%150;
     int startX = rand()%(panelWidth - width);
     int startY = rand()%(panelHeight - height);
     int endX = startX+width;
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
   (void)argc;
   (void)argv;
   int num_rays = 360;
-  int num_shapes = 8;
+  int num_shapes = 32;
   double time_max = 300;
   Ray *rays = malloc(num_rays * sizeof(Ray));
   Shape *shapes = malloc(num_shapes * sizeof(Shape));
@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
     "RayTracing Engine",
     SDL_WINDOWPOS_CENTERED,
     SDL_WINDOWPOS_CENTERED,
-    640,
-    480,
+    1620,
+    500,
     SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
   );
 
