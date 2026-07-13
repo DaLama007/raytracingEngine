@@ -17,11 +17,13 @@ typedef struct{
 typedef struct{
   int x;
   int y;
+  int z;
 }Point;
 
 typedef struct{
   double x;
   double y;
+  double z;
 }Vector;
 
 typedef struct{
@@ -62,10 +64,15 @@ void DrawSource(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32
 
 void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius)
 {
-  for (int i = -90; i < 360; i++) {
-    float angle = 2.0 * M_PI * i / 360; // radians
-    int x = (int)(centreX+ radius * cos(angle));
-    int y = (int)(centreY + radius * sin(angle));
+  int rings = 25;
+  for(r = 0; r<25; r++){
+    float theta = (float) r/rings * M_PI ; // radians
+    
+    x = r * cos(theta) * cos(phi);
+    y = r * cos(theta);
+    z = r * sin(phi) * cos(theta);
+
+
     SDL_RenderDrawPoint(renderer, x, y); // Draw point
   }
 }
@@ -81,7 +88,7 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
     //calculate entering and exiting times between x1 and x2 of shapes
     double minT = time;
     for (int j = 0; j< num_shapes; j++) {
-      
+
       Shape curr = shapes[j];
       // check for rectangle intersection
       if(strcmp("rectangle", curr.type)==0){
@@ -119,7 +126,7 @@ void DrawRays(SDL_Renderer * renderer, Ray *rays, int num_rays, Shape *shapes, i
         // <=> D^2*t^2 + 2LD*t + L^2 - r^2 = 0
         //
         // And the nthe determinant and calculate based on result
-        
+
         Point C = {curr.startX+(curr.endX-curr.startX)/2, curr.startY+(curr.endY - curr.startY)/2};
         double Lx = originX - C.x;
         double Ly = originY - C.y;
