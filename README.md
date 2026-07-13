@@ -1,6 +1,6 @@
 ## Raytracing Engine by Marwan
 
-[screenShotFinal.png]
+![screenShotFinal](https://github.com/DaLama007/raytracingEngine/blob/main/screenShotFinal.png)
 
 This is a 2d raytracing engine. To run run the following executable:
 raytracing.exe
